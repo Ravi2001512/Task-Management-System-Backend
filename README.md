@@ -1,4 +1,4 @@
-# Koncepthive Task - Backend
+# Task Management System - Backend
 
 ## Project Overview
 The backend is a Node.js REST API providing secure authentication and task management capabilities. It handles user registration, JWT-based login, and CRUD (Create, Read, Update, Delete) operations for tasks associated securely with the authenticated user.
