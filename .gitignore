@@ -10,7 +10,7 @@ dist/
 .env.production
 
 # Prisma generated client
-/src/generated/prisma
+/generated/prisma
 
 # Logs
 *.log

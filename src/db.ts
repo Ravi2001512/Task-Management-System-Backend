@@ -14,4 +14,4 @@ const adapter = new PrismaPg(pool);
 // Instantiate the Prisma Client with the driver adapter
 export const prisma = new PrismaClient({ adapter });
 
-export { pool };
+
