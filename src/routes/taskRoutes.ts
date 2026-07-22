@@ -48,13 +48,12 @@ const validateTask = (req: Request, res: Response, next: NextFunction): void => 
   next();
 };
 
-// GET /api/tasks
+// GET /api/tasks — returns only the authenticated user's tasks
 router.get('/', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const tasks = await prisma.task.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { userId: req.user!.id },
+      orderBy: { createdAt: 'desc' },
     });
     res.status(200).json(tasks);
   } catch (error) {
@@ -63,11 +62,37 @@ router.get('/', authMiddleware, async (req: Request, res: Response): Promise<voi
   }
 });
 
-// POST /api/tasks
+// GET /api/tasks/:id — returns a single task
+router.get('/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const task = await prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!task) {
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    if (task.userId !== req.user!.id) {
+      res.status(403).json({ message: 'Access denied' });
+      return;
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    console.error('Fetch task error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/tasks — create a new task 
 router.post('/', authMiddleware, validateTask, async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, description, priority, status, dueDate } = req.body;
-    
+
     const newTask = await prisma.task.create({
       data: {
         title: title.trim(),
@@ -75,6 +100,7 @@ router.post('/', authMiddleware, validateTask, async (req: Request, res: Respons
         priority,
         status,
         dueDate,
+        userId: req.user!.id,
       },
     });
 
@@ -85,7 +111,7 @@ router.post('/', authMiddleware, validateTask, async (req: Request, res: Respons
   }
 });
 
-// PUT /api/tasks/:id
+// PUT /api/tasks/:id — update an existing task 
 router.put('/:id', authMiddleware, validateTask, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -96,6 +122,11 @@ router.put('/:id', authMiddleware, validateTask, async (req: Request, res: Respo
     });
     if (!existingTask) {
       res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    if (existingTask.userId !== req.user!.id) {
+      res.status(403).json({ message: 'Access denied' });
       return;
     }
 
@@ -117,7 +148,7 @@ router.put('/:id', authMiddleware, validateTask, async (req: Request, res: Respo
   }
 });
 
-// DELETE /api/tasks/:id
+// DELETE /api/tasks/:id — delete a task 
 router.delete('/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -127,6 +158,11 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response): Promi
     });
     if (!existingTask) {
       res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    if (existingTask.userId !== req.user!.id) {
+      res.status(403).json({ message: 'Access denied' });
       return;
     }
 
@@ -142,4 +178,3 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response): Promi
 });
 
 export default router;
-

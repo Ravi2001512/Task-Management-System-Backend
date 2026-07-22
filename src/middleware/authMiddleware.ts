@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthPayload {
+    id:    string;   // User UUID from database
     email: string;
-    role: string;
+    role:  string;
 }
 
 // Extend Express Request to carry the authenticated user
